@@ -27,9 +27,10 @@ const weexFactoryPlugin = {
 
 const aliases = require('./alias')
 const resolve = p => {
-  const base = p.split('/')[0]
-  if (aliases[base]) {
-    return path.resolve(aliases[base], p.slice(base.length + 1))
+  // 根据路径中的前半部分去alias中找别名
+  const base = p.split('/')[0] // 以web/为例，拿到的是web
+  if (aliases[base]) { // 拿到的是alias的resolve之后的绝对路径入口文件夹
+    return path.resolve(aliases[base], p.slice(base.length + 1)) // 绝对路径入口文件夹 + 把/前缀分割之后 后面的xx.js文件名
   } else {
     return path.resolve(__dirname, '../', p)
   }
@@ -126,7 +127,7 @@ const builds = {
     format: 'umd',
     env: 'development',
     alias: { he: './entity-decoder' },
-    banner
+    banner // 每个js文件的标注头信息
   },
   // Runtime+compiler production build  (Browser)
   'web-full-prod': {
@@ -214,9 +215,9 @@ const builds = {
 }
 
 function genConfig (name) {
-  const opts = builds[name]
+  const opts = builds[name] // 入口文件等配置信息
   const config = {
-    input: opts.entry,
+    input: opts.entry, // 入口文件
     external: opts.external,
     plugins: [
       flow(),
@@ -260,12 +261,15 @@ function genConfig (name) {
     value: name
   })
 
-  return config
+  return config // 最终返回一个完整的配置对象信息
 }
 
+// 判断环境变量是否有 TARGET
+// 如果有的话，使用getConfig() 生成 rollup 配置文件
 if (process.env.TARGET) {
   module.exports = genConfig(process.env.TARGET)
 } else {
+  // 否则获取全部配置
   exports.getBuild = genConfig
   exports.getAllBuilds = () => Object.keys(builds).map(genConfig)
 }

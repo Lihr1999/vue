@@ -1,4 +1,5 @@
 /* @flow */
+// single file component 单文件组件转为JS对象
 
 import deindent from 'de-indent'
 import { parseHTML } from 'compiler/parser/html-parser'

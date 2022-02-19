@@ -228,7 +228,7 @@ export function toArray (list: any, start?: number): Array<any> {
 /**
  * Mix properties into target object.
  */
-export function extend (to: Object, _from: ?Object): Object {
+export function extend (to: Object, _from: ?Object): Object { // 浅拷贝
   for (const key in _from) {
     to[key] = _from[key]
   }

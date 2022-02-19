@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="app">
+        {{ reversedMessage }}
+        <hr>
+        {{ user.fullName }}
+    </div>
+
+    <script src="../../dist/vue.js"></script>
+    <script>
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                message: 'Hello Vue',
+                user: {
+                    firstName: '诸葛',
+                    lastName: '亮',
+                    fullName: ''
+                }
+            },
+            computed: {
+                reversedMessage: function() {
+                    return this.message.split('').reverse().join('')
+                }
+            },
+            watch: {
+                // 'user.firstName': function(newValue, oldValue) {
+                //     this.user.fullName = newValue.firstName + ' ' + newValue.lastName
+                // }
+                // 'user.lastName': function(newValue, oldValue) {
+                //     this.user.fullName = newValue.firstName + ' ' + newValue.lastName
+                // }
+                'user': {
+                    handler: function(newValue, oldValue) {
+                        this.user.fullName = newValue.firstName + ' ' + newValue.lastName
+                    },
+                    immediate: true,
+                    deep: true
+                }
+            }
+        })
+
+        // vm.$data.user.firstName = '张'    测试这行代码
+        // vm.$watch('user', function(newValue, oldValue) {
+        //     this.user.fullName = newValue.firstName + ' ' + newValue.lastName
+        // }, {
+        //     immediate: true,
+        //     deep: true, 
+        //     // 不加deep 会无法监听到fistName的变化，加了deep之后
+        //     // 在$watch内部会判断是否有deep这个选项，有的话会遍历访问每一个属性的值触发它们的get方法，
+        //     // 从而对他们添加和user一样的依赖 $watch内部已经对user new Wacher了
+        // })
+    </script>
+</body>
+</html>

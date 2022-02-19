@@ -1,5 +1,5 @@
 /* @flow */
-
+// 对平台相关的Vue构造函数设置一些配置信息，如：pathch、$mount等
 import Vue from 'core/index'
 import config from 'core/config'
 import { extend, noop } from 'shared/util'
@@ -20,6 +20,8 @@ import platformDirectives from './directives/index'
 import platformComponents from './components/index'
 
 // install platform specific utils
+// 判断是否是关键属性(表单元素的 input/checked/selected/muted)
+// 如果是这些属性，设置el.props属性(属性不设置到标签上)
 Vue.config.mustUseProp = mustUseProp
 Vue.config.isReservedTag = isReservedTag
 Vue.config.isReservedAttr = isReservedAttr
@@ -27,19 +29,23 @@ Vue.config.getTagNamespace = getTagNamespace
 Vue.config.isUnknownElement = isUnknownElement
 
 // install platform runtime directives & components
-extend(Vue.options.directives, platformDirectives)
-extend(Vue.options.components, platformComponents)
+// extend方法是把第二个参数的所有对象成员都拷贝到第一个参数对象中，功能：复制对象
+extend(Vue.options.directives, platformDirectives) // 注册指令 v-model v-show
+// 通过Vue.component注册的组件都会放在Vue.options.components中
+extend(Vue.options.components, platformComponents) // 注册组件 v-transition v-transition-group
 
 // install platform patch function
-Vue.prototype.__patch__ = inBrowser ? patch : noop
+// 把虚拟DOM转为真实DOM
+Vue.prototype.__patch__ = inBrowser ? patch : noop // 判断有没有window对象，有就返回patch，否则就返回noop空函数
 
 // public mount method
+// 挂载DOM
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
-  el = el && inBrowser ? query(el) : undefined
-  return mountComponent(this, el, hydrating)
+  el = el && inBrowser ? query(el) : undefined // 此处为了防止是运行时版本的时候，没有执行entry-runtime-with-compiler.js，导致DOM没有el
+  return mountComponent(this, el, hydrating) // 核心：渲染DOM(和浏览器无关)
 }
 
 // devtools global hook

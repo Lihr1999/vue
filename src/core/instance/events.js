@@ -10,11 +10,13 @@ import {
 import { updateListeners } from '../vdom/helpers/index'
 
 export function initEvents (vm: Component) {
-  vm._events = Object.create(null)
+  vm._events = Object.create(null) // 原型为null的对象
   vm._hasHookEvent = false
   // init parent attached events
+  // 获取父元素上附加的事件
   const listeners = vm.$options._parentListeners
   if (listeners) {
+    // 注册自定义事件
     updateComponentListeners(vm, listeners)
   }
 }
@@ -44,21 +46,25 @@ export function updateComponentListeners (
   listeners: Object,
   oldListeners: ?Object
 ) {
+  // 记录当前组件实例
   target = vm
   updateListeners(listeners, oldListeners || {}, add, remove, createOnceHandler, vm)
   target = undefined
 }
 
+// 挂载$on $once $off $emit
+// 发布订阅模式
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
     const vm: Component = this
-    if (Array.isArray(event)) {
-      for (let i = 0, l = event.length; i < l; i++) {
+    if (Array.isArray(event)) { // event是数组(给多个事件注册同一个事件处理函数)
+      for (let i = 0, l = event.length; i < l; i++) { // 是数组则遍历event，然后继续调用$on
         vm.$on(event[i], fn)
       }
-    } else {
-      (vm._events[event] || (vm._events[event] = [])).push(fn)
+    } else { // event字符串单个形式
+      // { event: [fn...] }
+      (vm._events[event] || (vm._events[event] = [])).push(fn) // 查看一下在events中是否有event属性，没有则将它的值设置为[]
       // optimize hook:event cost by using a boolean flag marked at registration
       // instead of a hash lookup
       if (hookRE.test(event)) {

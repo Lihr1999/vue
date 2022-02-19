@@ -33,6 +33,7 @@ export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+  // 下面这段代码的作用是：找到当前Vue实例添加到当前组件的父组件的$children中
   let parent = options.parent
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
@@ -56,6 +57,8 @@ export function initLifecycle (vm: Component) {
 }
 
 export function lifecycleMixin (Vue: Class<Component>) {
+  // _update 方法的作用是把 VNode 渲染成真实的DOM
+  // 首次渲染会调用，数据更新会调用
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
@@ -64,10 +67,12 @@ export function lifecycleMixin (Vue: Class<Component>) {
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
-    if (!prevVnode) {
+    // 核心地方：_update内部调用__patch__
+    // __patch__方法是把虚拟DOM转为真实DOM，然后挂载到$el上
+    if (!prevVnode) { // 首次渲染
       // initial render
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
-    } else {
+    } else { // 数据更新时调用__patch__
       // updates
       vm.$el = vm.__patch__(prevVnode, vnode)
     }
@@ -87,7 +92,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     // updated in a parent's updated hook.
   }
 
-  Vue.prototype.$forceUpdate = function () {
+  Vue.prototype.$forceUpdate = function () { // 强制更新视图，其实就是调用watcher的update方法
     const vm: Component = this
     if (vm._watcher) {
       vm._watcher.update()
@@ -146,7 +151,7 @@ export function mountComponent (
   vm.$el = el
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production') { // 运行时版本的时候没有传render函数就会报错
       /* istanbul ignore if */
       if ((vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
         vm.$options.el || el) {
@@ -164,7 +169,7 @@ export function mountComponent (
       }
     }
   }
-  callHook(vm, 'beforeMount')
+  callHook(vm, 'beforeMount') // 触发beforeMount钩子函数
 
   let updateComponent
   /* istanbul ignore if */
@@ -187,6 +192,8 @@ export function mountComponent (
     }
   } else {
     updateComponent = () => {
+      // _update是对比两个DOM的差异，更新到DOM上
+      // _render()是调用用户传进来的_render或者编译器生成的render 最终返回转换后的虚拟DOM
       vm._update(vm._render(), hydrating)
     }
   }
@@ -194,20 +201,20 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
-  new Watcher(vm, updateComponent, noop, {
+  new Watcher(vm, updateComponent, noop, { // noop是空函数 当前是渲染watcher不会用到，只有computed、用户watcher才会用到这个参数
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
-        callHook(vm, 'beforeUpdate')
+        callHook(vm, 'beforeUpdate') // 触发beforeUpdate钩子函数
       }
     }
-  }, true /* isRenderWatcher */)
+  }, true /* isRenderWatcher */) // true 是 渲染watcher
   hydrating = false
 
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
     vm._isMounted = true
-    callHook(vm, 'mounted')
+    callHook(vm, 'mounted')  // 触发mounted钩子函数
   }
   return vm
 }

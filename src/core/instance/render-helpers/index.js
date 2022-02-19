@@ -12,7 +12,7 @@ import { bindObjectListeners } from './bind-object-listeners'
 import { resolveScopedSlots } from './resolve-scoped-slots'
 import { bindDynamicKeys, prependModifier } from './bind-dynamic-keys'
 
-export function installRenderHelpers (target: any) {
+export function installRenderHelpers (target: any) { // 把模板编译成render函数，render函数内部会调用这些方法
   target._o = markOnce
   target._n = toNumber
   target._s = toString
@@ -24,7 +24,7 @@ export function installRenderHelpers (target: any) {
   target._f = resolveFilter
   target._k = checkKeyCodes
   target._b = bindObjectProps
-  target._v = createTextVNode
+  target._v = createTextVNode // 创建文本虚拟节点
   target._e = createEmptyVNode
   target._u = resolveScopedSlots
   target._g = bindObjectListeners

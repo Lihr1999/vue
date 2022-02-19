@@ -18,8 +18,10 @@ export function initExtend (Vue: GlobalAPI) {
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
+    // this是Vue构造函数
     const Super = this
     const SuperId = Super.cid
+    // 从缓存中加载组件的构造函数
     const cachedCtors = extendOptions._Ctor || (extendOptions._Ctor = {})
     if (cachedCtors[SuperId]) {
       return cachedCtors[SuperId]
@@ -27,15 +29,19 @@ export function initExtend (Vue: GlobalAPI) {
 
     const name = extendOptions.name || Super.options.name
     if (process.env.NODE_ENV !== 'production' && name) {
+      // 如果是开发环境验证组件的名称
       validateComponentName(name)
     }
 
-    const Sub = function VueComponent (options) {
+    const Sub = function VueComponent (options) { // 构造函数
+      // 调用 _init() 初始化
       this._init(options)
     }
-    Sub.prototype = Object.create(Super.prototype)
+    // 原型继承自 Vue
+    Sub.prototype = Object.create(Super.prototype) // Super是Vue
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
+    // 合并 options
     Sub.options = mergeOptions(
       Super.options,
       extendOptions
@@ -59,10 +65,11 @@ export function initExtend (Vue: GlobalAPI) {
 
     // create asset registers, so extended classes
     // can have their private assets too.
-    ASSET_TYPES.forEach(function (type) {
+    ASSET_TYPES.forEach(function (type) { // component、directive、filter
       Sub[type] = Super[type]
     })
     // enable recursive self-lookup
+    // 把组件构造函数保存到 Ctor.options.components.comp = Ctor
     if (name) {
       Sub.options.components[name] = Sub
     }

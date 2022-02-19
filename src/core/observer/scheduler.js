@@ -70,29 +70,30 @@ if (inBrowser && !isIE) {
  */
 function flushSchedulerQueue () {
   currentFlushTimestamp = getNow()
-  flushing = true
+  flushing = true // 标记正在处理watcher队列
   let watcher, id
 
   // Sort queue before flush.
   // This ensures that:
   // 1. Components are updated from parent to child. (because parent is always
-  //    created before the child)
+  //    created before the child) 组件更新的顺序是父组件 -> 子组件，因为先创建父组件再创建子组件
   // 2. A component's user watchers are run before its render watcher (because
-  //    user watchers are created before the render watcher)
+  //    user watchers are created before the render watcher) 用户watcher在渲染watcher之前执行(在initState中执行的)，而在mountComponent中才创建的渲染watcher,initState在mountComponent之前执行
   // 3. If a component is destroyed during a parent component's watcher run,
-  //    its watchers can be skipped.
-  queue.sort((a, b) => a.id - b.id)
+  //    its watchers can be skipped. 如果一个子组件在父组件执行之前被销毁了，这个watcher应当被跳过
+  queue.sort((a, b) => a.id - b.id) // 对queue排序
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 此处不把queue.length放到第一个表达式中缓存，是因为可能这个过程中还有新的watcher被push
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
-      watcher.before()
+      watcher.before() // before只有在创建渲染watcher的时候才会有，是用来触发beforeUpdate生命周期函数
     }
     id = watcher.id
-    has[id] = null
-    watcher.run()
+    has[id] = null // 此时watcher已经被处理了，所以置为null 为了数据变化后下一次watcher还能被正常运行
+    watcher.run() // 核心: run方法
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
       circular[id] = (circular[id] || 0) + 1
@@ -111,14 +112,15 @@ function flushSchedulerQueue () {
   }
 
   // keep copies of post queues before resetting state
-  const activatedQueue = activatedChildren.slice()
-  const updatedQueue = queue.slice()
+  const activatedQueue = activatedChildren.slice() // 备份activated队列
+  const updatedQueue = queue.slice() // 备份updated队列
 
-  resetSchedulerState()
+  // 清空队列 等待、刷新的状态置为false
+  resetSchedulerState() // queue.length = activatedChildren.length = 0  waiting = flushing = false
 
   // call component updated and activated hooks
-  callActivatedHooks(activatedQueue)
-  callUpdatedHooks(updatedQueue)
+  callActivatedHooks(activatedQueue) // 触发activated钩子函数
+  callUpdatedHooks(updatedQueue)  // 触发updated钩子函数
 
   // devtool hook
   /* istanbul ignore if */
@@ -163,28 +165,31 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
-  if (has[id] == null) {
-    has[id] = true
-    if (!flushing) {
-      queue.push(watcher)
-    } else {
+  if (has[id] == null) { // 防止watcher被重复处理
+    has[id] = true // 标记当前这个watcher已经被处理了
+    if (!flushing) { // flushing: true正在刷新; false没有在处理
+      queue.push(watcher) // 当前队列没有被处理的情况下，直接把watcher放到队列的末尾
+    } else { // 代表queue正在被处理，需要找到一个合适位置把watcher插入进去
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
-      let i = queue.length - 1
-      while (i > index && queue[i].id > watcher.id) {
+      let i = queue.length - 1 // 取得队列的长度-1(即最后一个watcher所在的索引)
+      // index: 当前处理到的第几个元素索引
+      // i > index: 代表队列还没被处理完
+      // queue[i].id > watcher.id: 队列[i].id 大于当前watcher.id
+      while (i > index && queue[i].id > watcher.id) { // 如果当前队列还没被处理完 并且 从后往前去和当前watcher.id进行判断，直到找到小于或等于的时候就停止查找
         i--
       }
-      queue.splice(i + 1, 0, watcher)
+      queue.splice(i + 1, 0, watcher) // 往i + 1的后面追加
     }
     // queue the flush
-    if (!waiting) {
+    if (!waiting) { // 队列是否被执行
       waiting = true
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return
       }
-      nextTick(flushSchedulerQueue)
+      nextTick(flushSchedulerQueue) // flushSchedulerQueue方法内部遍历所有的watcher，并且调用watcher的run方法
     }
   }
 }

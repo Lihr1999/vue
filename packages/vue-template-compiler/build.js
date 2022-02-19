@@ -32,7 +32,7 @@ function isPrimitive (value) {
 
 /**
  * Quick object check - this is primarily used to tell
- * Objects from primitive values when we know the value
+ * objects from primitive values when we know the value
  * is a JSON-compliant type.
  */
 function isObject (obj) {
@@ -173,7 +173,7 @@ var bind = Function.prototype.bind
 /**
  * Mix properties into target object.
  */
-function extend (to, _from) {
+function extend (to, _from) { // 浅拷贝
   for (var key in _from) {
     to[key] = _from[key];
   }
@@ -1324,8 +1324,8 @@ function set (target, key, val) {
     target[key] = val;
     return val
   }
-  defineReactive$$1(ob.value, key, val);
-  ob.dep.notify();
+  defineReactive$$1(ob.value, key, val); // 设置响应式
+  ob.dep.notify(); // 如果已经有设置过key属性的变量，那么需要更新一下视图，因为这里是触发了set方法
   return val
 }
 
@@ -2113,7 +2113,7 @@ function transformNode (el, options) {
     }
   }
   if (staticClass) {
-    el.staticClass = JSON.stringify(staticClass);
+    el.staticClass = JSON.stringify(staticClass.replace(/\s+/g, ' ').trim());
   }
   var classBinding = getBindingAttr(el, 'class', false /* getStatic */);
   if (classBinding) {
